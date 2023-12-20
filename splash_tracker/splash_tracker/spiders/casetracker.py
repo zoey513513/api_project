@@ -42,19 +42,22 @@ class CasetrackerSpider(scrapy.Spider):
             end_pos = cases_array.find("\\", start_pos)
             id_value = cases_array[start_pos:end_pos]
             start_pos = cases_array.find("IOE", end_pos)
-            time.sleep(4)
+            time.sleep(6)
             yield scrapy.Request(url=f'https://www.casestatusext.com/cases/{id_value}', callback=self.parse)
 
     def parse(self, response):
-        cell = response.xpath('//td[@class="ant-descriptions-item-content"]/span/text()').extract_first()
+        casenumber = response.xpath('//td[@class="ant-descriptions-item-content"]/span/text()').extract_first()
         status = response.xpath('//ul[contains(@class,"ant-timeline")]')
         timelines = status.xpath('.//li')
-        if timelines.xpath('.//div[contains(@class,"ant-timeline-item-label")][-1]/text()').get() > '2023-08-01':
-            for timeline in timelines:
-                time = timeline.xpath('.//div[@class="ant-timeline-item-label"]/text()').get()
-                status = timeline.xpath('.//div[@class="ant-timeline-item-content"]/text()').get()
-                yield{
-                    'case_number': cell,
-                'time': time,
-                'status': status,
-            }
+        FileName = 'case_status.txt'
+        with open(FileName, 'w') as file:
+            file.write('')
+        if timelines[-1].xpath('.//div[@class="ant-timeline-item-label"]/text()').get() > '2023-08-01':
+            with open(FileName, 'a') as file:
+                file.write(casenumber + '\n')
+                for timeline in timelines:
+                    time = timeline.xpath('.//div[@class="ant-timeline-item-label"]/text()').get()
+                    status = timeline.xpath('.//div[@class="ant-timeline-item-content"]/text()').get()
+                    file.write(time + status + '\n')
+        file.close()
+
