@@ -11,6 +11,19 @@ class CasetrackerSpider(scrapy.Spider):
 
     script = '''
     function main(splash, args)
+      -- method 1 to change user agent
+      splash:set_user_agent("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36")
+    
+      -- method 2 to change user agent
+      --headers = {
+      --  ['User-Agent'] = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36"
+      --}
+      --splash:set_custom_headers(headers)    
+      
+      -- method 3 to change user agent
+      --splash:on_request(function(request)
+      --	   request:set_header('User-Agent','Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36')
+      --    end)  
       splash.private_mode_disabled = false
       assert(splash:go(args.url))
       assert(splash:wait(2))
@@ -26,6 +39,9 @@ class CasetrackerSpider(scrapy.Spider):
     end
     '''
     def start_requests(self):
+        FileName = 'case_status.txt'
+        with open(FileName, 'w') as file:
+            file.write('')
         yield SplashRequest(url='https://www.casestatusext.com/cases/IOE0918743038', callback=self.parse_onepage,
                             endpoint='execute', args={'lua_source': self.script})
 
@@ -42,7 +58,7 @@ class CasetrackerSpider(scrapy.Spider):
             end_pos = cases_array.find("\\", start_pos)
             id_value = cases_array[start_pos:end_pos]
             start_pos = cases_array.find("IOE", end_pos)
-            time.sleep(6)
+            time.sleep(4)
             yield scrapy.Request(url=f'https://www.casestatusext.com/cases/{id_value}', callback=self.parse)
 
     def parse(self, response):
@@ -50,14 +66,13 @@ class CasetrackerSpider(scrapy.Spider):
         status = response.xpath('//ul[contains(@class,"ant-timeline")]')
         timelines = status.xpath('.//li')
         FileName = 'case_status.txt'
-        with open(FileName, 'w') as file:
-            file.write('')
-        if timelines[-1].xpath('.//div[@class="ant-timeline-item-label"]/text()').get() > '2023-08-01':
+        last_change_date = timelines[-1].xpath('.//div[@class="ant-timeline-item-label"]/text()').get()
+        if last_change_date > '2023-08-01':
             with open(FileName, 'a') as file:
                 file.write(casenumber + '\n')
                 for timeline in timelines:
                     time = timeline.xpath('.//div[@class="ant-timeline-item-label"]/text()').get()
                     status = timeline.xpath('.//div[@class="ant-timeline-item-content"]/text()').get()
                     file.write(time + status + '\n')
-        file.close()
+            file.close()
 
