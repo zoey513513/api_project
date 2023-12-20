@@ -25,7 +25,6 @@ class CasetrackerSpider(scrapy.Spider):
       }
     end
     '''
-
     def start_requests(self):
         yield SplashRequest(url='https://www.casestatusext.com/cases/IOE0918743038', callback=self.parse_onepage,
                             endpoint='execute', args={'lua_source': self.script})
