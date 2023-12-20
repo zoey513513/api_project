@@ -49,7 +49,7 @@ class CasetrackerSpider(scrapy.Spider):
         cell = response.xpath('//td[@class="ant-descriptions-item-content"]/span/text()').extract_first()
         status = response.xpath('//ul[contains(@class,"ant-timeline")]')
         timelines = status.xpath('.//li')
-        if timelines.xpath('.//div[contains(@class,"ant-timeline-item-label")][-1]/text()').getall() > '2023-08-01':
+        if timelines.xpath('.//div[contains(@class,"ant-timeline-item-label")][-1]/text()').get() > '2023-08-01':
             for timeline in timelines:
                 time = timeline.xpath('.//div[@class="ant-timeline-item-label"]/text()').get()
                 status = timeline.xpath('.//div[@class="ant-timeline-item-content"]/text()').get()
